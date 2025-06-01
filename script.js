@@ -1,79 +1,29 @@
-const display = document.getElementById('display');
-const buttons = document.querySelectorAll('.btn');
-
-let currentInput = '';
-let resultDisplayed = false;
-
-buttons.forEach(button => {
-  button.addEventListener('click', () => {
-    const action = button.dataset.action;
-    const value = button.textContent;
-
-    if (!action) {
-      if (resultDisplayed) {
-        currentInput = '';
-        resultDisplayed = false;
-      }
-      currentInput += value;
-      updateDisplay(currentInput);
-    } else {
-      switch (action) {
-        case 'clear':
-          currentInput = '';
-          updateDisplay('0');
-          break;
-        case 'del':
-          currentInput = currentInput.slice(0, -1);
-          updateDisplay(currentInput || '0');
-          break;
-        case '=':
-          try {
-            const result = eval(currentInput.replace(/×/g, '*').replace(/÷/g, '/'));
-            updateDisplay(result);
-            currentInput = result.toString();
-            resultDisplayed = true;
-          } catch {
-            updateDisplay('Error');
-            currentInput = '';
-          }
-          break;
-        default:
-          currentInput += action;
-          updateDisplay(currentInput);
-      }
-    }
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.querySelector(this.getAttribute('href')).scrollIntoView({
+      behavior: 'smooth'
+    });
   });
 });
+const faders = document.querySelectorAll('.fade-in');
 
-function updateDisplay(value) {
-  display.textContent = value;
-}
+const appearOptions = {
+  threshold: 0,
+  rootMargin: "0px 0px -100px 0px"
+};
 
-// Bonus: Keyboard Support
-document.addEventListener('keydown', (e) => {
-  const key = e.key;
-
-  if (!isNaN(key) || key === '.') {
-    currentInput += key;
-    updateDisplay(currentInput);
-  } else if (['+', '-', '*', '/'].includes(key)) {
-    currentInput += key;
-    updateDisplay(currentInput);
-  } else if (key === 'Enter') {
-    try {
-      const result = eval(currentInput);
-      updateDisplay(result);
-      currentInput = result.toString();
-      resultDisplayed = true;
-    } catch {
-      updateDisplay('Error');
-      currentInput = '';
+const appearOnScroll = new IntersectionObserver(function(entries, appearOnScroll) {
+  entries.forEach(entry => {
+    if(!entry.isIntersecting) {
+      return;
+    } else {
+      entry.target.classList.add('appear');
+      appearOnScroll.unobserve(entry.target);
     }
-  } else if (key === 'Backspace') {
-    currentInput = currentInput.slice(0, -1);
-    updateDisplay(currentInput || '0');
-  } else if (key.toLowerCase() === 'c') {
-    currentInput = '';
-    updateDisplay('0');
-  }
+  });
+}, appearOptions);
+
+faders.forEach(fader => {
+  appearOnScroll.observe(fader);
 });
