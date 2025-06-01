@@ -1,45 +1,79 @@
-const galleryImages = document.querySelectorAll('.gallery img');
-const lightbox = document.getElementById('lightbox');
-const lightboxImg = document.getElementById('lightbox-img');
+const display = document.getElementById('display');
+const buttons = document.querySelectorAll('.btn');
 
-let currentIndex = 0;
+let currentInput = '';
+let resultDisplayed = false;
 
-// Show lightbox on image click
-galleryImages.forEach((img, index) => {
-  img.addEventListener('click', () => {
-    currentIndex = index;
-    showLightbox(img.src);
+buttons.forEach(button => {
+  button.addEventListener('click', () => {
+    const action = button.dataset.action;
+    const value = button.textContent;
+
+    if (!action) {
+      if (resultDisplayed) {
+        currentInput = '';
+        resultDisplayed = false;
+      }
+      currentInput += value;
+      updateDisplay(currentInput);
+    } else {
+      switch (action) {
+        case 'clear':
+          currentInput = '';
+          updateDisplay('0');
+          break;
+        case 'del':
+          currentInput = currentInput.slice(0, -1);
+          updateDisplay(currentInput || '0');
+          break;
+        case '=':
+          try {
+            const result = eval(currentInput.replace(/×/g, '*').replace(/÷/g, '/'));
+            updateDisplay(result);
+            currentInput = result.toString();
+            resultDisplayed = true;
+          } catch {
+            updateDisplay('Error');
+            currentInput = '';
+          }
+          break;
+        default:
+          currentInput += action;
+          updateDisplay(currentInput);
+      }
+    }
   });
 });
 
-function showLightbox(src) {
-  lightbox.style.display = 'flex';
-  lightboxImg.src = src;
+function updateDisplay(value) {
+  display.textContent = value;
 }
 
-function closeLightbox() {
-  lightbox.style.display = 'none';
-}
-
-// Navigate to previous image
-function prevImage() {
-  currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
-  lightboxImg.src = galleryImages[currentIndex].src;
-}
-
-// Navigate to next image
-function nextImage() {
-  currentIndex = (currentIndex + 1) % galleryImages.length;
-  lightboxImg.src = galleryImages[currentIndex].src;
-}
-
-// Close lightbox with Escape key
+// Bonus: Keyboard Support
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    closeLightbox();
-  } else if (e.key === 'ArrowRight') {
-    nextImage();
-  } else if (e.key === 'ArrowLeft') {
-    prevImage();
+  const key = e.key;
+
+  if (!isNaN(key) || key === '.') {
+    currentInput += key;
+    updateDisplay(currentInput);
+  } else if (['+', '-', '*', '/'].includes(key)) {
+    currentInput += key;
+    updateDisplay(currentInput);
+  } else if (key === 'Enter') {
+    try {
+      const result = eval(currentInput);
+      updateDisplay(result);
+      currentInput = result.toString();
+      resultDisplayed = true;
+    } catch {
+      updateDisplay('Error');
+      currentInput = '';
+    }
+  } else if (key === 'Backspace') {
+    currentInput = currentInput.slice(0, -1);
+    updateDisplay(currentInput || '0');
+  } else if (key.toLowerCase() === 'c') {
+    currentInput = '';
+    updateDisplay('0');
   }
 });
